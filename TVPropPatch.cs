@@ -12,8 +12,7 @@ namespace TVPropPatch
 {
     public class Mod : IUserMod
     {
-
-        public string Name => "TV Props Patch [BETA]";
+        public string Name => "TV Props Patch [BETA] v1.1";
         public string Description => "Patch the Tree & Vehicle Props mod";
 
         public void OnEnabled()
@@ -26,10 +25,8 @@ namespace TVPropPatch
             if (HarmonyHelper.IsHarmonyInstalled) Patcher.UnpatchAll();
         }
 
-        public static HashSet<PropInfo> generatedPropInfo = new HashSet<PropInfo>();
         public static HashSet<PropInfo> generatedVehicleProp = new HashSet<PropInfo>();
         public static HashSet<PropInfo> generatedTreeProp = new HashSet<PropInfo>();
-
     }
 
     public static class Patcher
@@ -73,7 +70,7 @@ namespace TVPropPatch
     {
         public static void Prefix(ref bool active, ref PropInfo info)
         {
-            if (Mod.generatedPropInfo.Contains(info))
+            if (Mod.generatedVehicleProp.Contains(info))
             {
                 active = false;
             }
@@ -124,6 +121,7 @@ namespace TVPropPatch
                 }
                 key.m_lodRenderDistance = value.m_lodRenderDistance;
                 key.m_maxRenderDistance = value.m_maxRenderDistance;
+                key.m_isCustomContent = value.m_isCustomContent;
                 key.m_generatedInfo = UnityEngine.Object.Instantiate<PropInfoGen>(key.m_generatedInfo);
                 key.m_generatedInfo.name = key.name;
                 key.m_generatedInfo.m_propInfo = key;
@@ -149,7 +147,6 @@ namespace TVPropPatch
                 }
 
                 Mod.generatedVehicleProp.Add(key);
-                Mod.generatedPropInfo.Add(key);
             }
             foreach (KeyValuePair<PropInfo, TreeInfo> keyValuePair2 in CS_TreeProps.Mod.propToTreeCloneMap)
             {
@@ -164,6 +161,7 @@ namespace TVPropPatch
                 key2.m_lodObject = key2.gameObject;
                 key2.m_generatedInfo = UnityEngine.Object.Instantiate<PropInfoGen>(key2.m_generatedInfo);
                 key2.m_generatedInfo.name = key2.name;
+                key2.m_isCustomContent = value2.m_isCustomContent;
                 key2.m_generatedInfo.m_propInfo = key2;
                 if (key2.m_mesh != null)
                 {
