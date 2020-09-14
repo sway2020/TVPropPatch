@@ -12,7 +12,7 @@ namespace TVPropPatch
 {
     public class Mod : IUserMod
     {
-        public string Name => "TV Props Patch [BETA] v1.1";
+        public string Name => "TV Props Patch [BETA] v1.2";
         public string Description => "Patch the Tree & Vehicle Props mod";
 
         public void OnEnabled()
@@ -27,6 +27,7 @@ namespace TVPropPatch
 
         public static HashSet<PropInfo> generatedVehicleProp = new HashSet<PropInfo>();
         public static HashSet<PropInfo> generatedTreeProp = new HashSet<PropInfo>();
+        public static Dictionary<PropInfo, VehicleInfo> propVehicleInfoTable = new Dictionary<PropInfo, VehicleInfo>();
     }
 
     public static class Patcher
@@ -147,6 +148,7 @@ namespace TVPropPatch
                 }
 
                 Mod.generatedVehicleProp.Add(key);
+                Mod.propVehicleInfoTable.Add(key, value);
             }
             foreach (KeyValuePair<PropInfo, TreeInfo> keyValuePair2 in CS_TreeProps.Mod.propToTreeCloneMap)
             {
