@@ -12,8 +12,8 @@ namespace TVPropPatch
 {
     public class Mod : IUserMod
     {
-        public string Name => "TV Props Patch [BETA] v1.2";
-        public string Description => "Patch the Tree & Vehicle Props mod";
+        public string Name => "TV Props Patch 1.2";
+        public string Description => "Patch the Tree & Vehicle Props mod. Add support for Find It 2";
 
         public void OnEnabled()
         {
