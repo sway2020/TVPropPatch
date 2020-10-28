@@ -12,7 +12,7 @@ namespace TVPropPatch
 {
     public class Mod : IUserMod
     {
-        public string Name => "TV Props Patch 1.2";
+        public string Name => "TV Props Patch 1.3";
         public string Description => "Patch the Tree & Vehicle Props mod. Add support for Find It 2";
 
         public void OnEnabled()
@@ -123,6 +123,7 @@ namespace TVPropPatch
                 key.m_lodRenderDistance = value.m_lodRenderDistance;
                 key.m_maxRenderDistance = value.m_maxRenderDistance;
                 key.m_isCustomContent = value.m_isCustomContent;
+                key.m_dlcRequired = value.m_dlcRequired;
                 key.m_generatedInfo = UnityEngine.Object.Instantiate<PropInfoGen>(key.m_generatedInfo);
                 key.m_generatedInfo.name = key.name;
                 key.m_generatedInfo.m_propInfo = key;
@@ -164,6 +165,7 @@ namespace TVPropPatch
                 key2.m_generatedInfo = UnityEngine.Object.Instantiate<PropInfoGen>(key2.m_generatedInfo);
                 key2.m_generatedInfo.name = key2.name;
                 key2.m_isCustomContent = value2.m_isCustomContent;
+                key2.m_dlcRequired = value2.m_dlcRequired;
                 key2.m_generatedInfo.m_propInfo = key2;
                 if (key2.m_mesh != null)
                 {
