@@ -12,7 +12,7 @@ namespace TVPropPatch
 {
     public class Mod : IUserMod
     {
-        public string Name => "TV Props Patch 1.3";
+        public string Name => "TV Props Patch 1.4";
         public string Description => "Patch the Tree & Vehicle Props mod. Add support for Find It 2";
 
         public void OnEnabled()
@@ -169,6 +169,7 @@ namespace TVPropPatch
                 key2.m_generatedInfo.m_propInfo = key2;
                 if (key2.m_mesh != null)
                 {
+                    key2.m_mesh = UnityEngine.Object.Instantiate<Mesh>(value2.m_mesh);
                     key2.m_generatedInfo.m_size = Vector3.one * (Math.Max(key2.m_mesh.bounds.extents.x, Math.Max(key2.m_mesh.bounds.extents.y, key2.m_mesh.bounds.extents.z)) * 2f - 1f);
                 }
                 if (key2.m_material != null)
@@ -184,18 +185,25 @@ namespace TVPropPatch
                     {
                         if (key2.m_material.shader.name == "Custom/Trees/Default")
                         {
-                            Debug.Log("[Tree and Vehicle Props] Cleared vertex colors for " + key2.name);
-                            Color[] array2 = new Color[key2.m_mesh.vertices.Length];
-                            for (int i = 0; i < array2.Length; i++)
+                            if (key2.m_mesh.isReadable)
                             {
-                                array2[i] = new Color(0f, 0f, 0f, 0f);
+                                // Debug.Log("[Tree and Vehicle Props] Remove tree sway for " + key2.name);
+                                Color[] array2 = new Color[key2.m_mesh.vertices.Length];
+                                for (int i = 0; i < array2.Length; i++)
+                                {
+                                    array2[i] = new Color(0f, 0f, 0f, 0f);
+                                }
+                                key2.m_mesh.colors = array2;
                             }
-                            key2.m_mesh.colors = array2;
+                            else
+                            {
+                                Debug.Log($"[Tree and Vehicle Props] Can't remove tree sway for vanilla trees. Skipped {key2.name}");
+                            }
                         }
                     }
-                    catch (Exception)
+                    catch (Exception ex)
                     {
-                        Debug.Log("[Tree and Vehicle Props] Vanilla tree prop skipped.");
+                        Debug.Log($"[Tree and Vehicle Props] {ex.Message}");
                     }
                 }
                 Mod.generatedTreeProp.Add(key2);
