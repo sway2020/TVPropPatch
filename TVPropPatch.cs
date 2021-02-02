@@ -4,7 +4,7 @@ using ICities;
 using System;
 using System.Reflection;
 using UnityEngine;
-using ColossalFramework;
+using ColossalFramework.UI;
 using System.Collections.Generic;
 using CS_TreeProps;
 
@@ -12,17 +12,50 @@ namespace TVPropPatch
 {
     public class Mod : IUserMod
     {
-        public string Name => "TV Props Patch 1.3";
+        public string Name => "TV Props Patch 1.4";
         public string Description => "Patch the Tree & Vehicle Props mod. Add support for Find It 2";
 
         public void OnEnabled()
         {
             HarmonyHelper.DoOnHarmonyReady(() => Patcher.PatchAll());
+            XMLUtils.LoadSettings();
         }
 
         public void OnDisabled()
         {
             if (HarmonyHelper.IsHarmonyInstalled) Patcher.UnpatchAll();
+        }
+
+        public void OnSettingsUI(UIHelperBase helper)
+        {
+            try
+            {
+                UIHelper group = helper.AddGroup(Name) as UIHelper;
+                UIPanel panel = group.self as UIPanel;
+
+                UICheckBox skipVanillaVehicles = (UICheckBox)group.AddCheckbox("Skip prop conversion for all vanilla vehicles", Settings.skipVanillaVehicles, (b) =>
+                {
+                    Settings.skipVanillaVehicles = b;
+                    XMLUtils.SaveSettings();
+                });
+                skipVanillaVehicles.tooltip = "Generated vanilla vehicle props will disappear next time when a save file is loaded";
+                group.AddSpace(10);
+
+                UICheckBox skipVanillaTrees = (UICheckBox)group.AddCheckbox("Skip prop conversion for all vanilla trees", Settings.skipVanillaTrees, (b) =>
+                {
+                    Settings.skipVanillaTrees = b;
+                    XMLUtils.SaveSettings();
+                });
+                skipVanillaVehicles.tooltip = "Generated vanilla tree props will disappear next time when a save file is loaded";
+                group.AddSpace(10);
+
+
+            }
+            catch (Exception e)
+            {
+                Debug.Log("OnSettingsUI failed");
+                Debug.LogException(e);
+            }
         }
 
         public static HashSet<PropInfo> generatedVehicleProp = new HashSet<PropInfo>();
@@ -77,6 +110,79 @@ namespace TVPropPatch
             }
         }
     }
+
+    [HarmonyPatch]
+    public static class TreeToPropPatch
+    {
+        public static MethodBase TargetMethod()
+        {
+            return typeof(CS_TreeProps.AssetExtension).GetMethod(nameof(CS_TreeProps.AssetExtension.TreeToProp));
+        }
+
+        public static bool Prefix(ref TreeInfo tree)
+        {
+            if (tree == null) return false;
+            if (Settings.skipVanillaTrees && !tree.m_isCustomContent) return false;
+
+            PropInfo propInfo = AssetExtension.CloneProp();
+            propInfo.name = tree.name.Replace("_Data", "") + " Prop_Data";
+            propInfo.m_mesh = tree.m_mesh;
+            propInfo.m_material = tree.m_material;
+            propInfo.m_Thumbnail = tree.m_Thumbnail;
+            propInfo.m_InfoTooltipThumbnail = tree.m_InfoTooltipThumbnail;
+            propInfo.m_InfoTooltipAtlas = tree.m_InfoTooltipAtlas;
+            propInfo.m_Atlas = tree.m_Atlas;
+            propInfo.m_generatedInfo.m_center = tree.m_generatedInfo.m_center;
+            propInfo.m_generatedInfo.m_uvmapArea = tree.m_generatedInfo.m_uvmapArea;
+            propInfo.m_generatedInfo.m_size = tree.m_generatedInfo.m_size;
+            propInfo.m_generatedInfo.m_triangleArea = tree.m_generatedInfo.m_triangleArea;
+            propInfo.m_color0 = tree.m_defaultColor;
+            propInfo.m_color1 = tree.m_defaultColor;
+            propInfo.m_color2 = tree.m_defaultColor;
+            propInfo.m_color3 = tree.m_defaultColor;
+            CS_TreeProps.Mod.propToTreeCloneMap.Add(propInfo, tree);
+
+            return false;
+        }
+    }
+
+    [HarmonyPatch]
+    public static class VehicleToPropPatch
+    {
+        public static MethodBase TargetMethod()
+        {
+            return typeof(CS_TreeProps.AssetExtension).GetMethod(nameof(CS_TreeProps.AssetExtension.VehicleToProp));
+        }
+
+        public static bool Prefix(ref VehicleInfo vehicle)
+        {
+            if (vehicle == null || vehicle.name == "Vortex") return false;
+            if (Settings.skipVanillaVehicles && !vehicle.m_isCustomContent) return false;
+
+            PropInfo propInfo = AssetExtension.CloneProp();
+            propInfo.name = vehicle.name.Replace("_Data", "") + " Prop_Data";
+            propInfo.m_mesh = vehicle.m_mesh;
+            propInfo.m_material = UnityEngine.Object.Instantiate<Material>(vehicle.m_material);
+            Shader shader = Shader.Find("Custom/Props/Prop/Default");
+            bool flag2 = propInfo.m_material != null;
+            if (flag2)
+            {
+                propInfo.m_material.shader = shader;
+            }
+            propInfo.m_Thumbnail = vehicle.m_Thumbnail;
+            propInfo.m_InfoTooltipThumbnail = vehicle.m_InfoTooltipThumbnail;
+            propInfo.m_InfoTooltipAtlas = vehicle.m_InfoTooltipAtlas;
+            propInfo.m_Atlas = vehicle.m_Atlas;
+            propInfo.m_color0 = vehicle.m_color0;
+            propInfo.m_color1 = vehicle.m_color1;
+            propInfo.m_color2 = vehicle.m_color2;
+            propInfo.m_color3 = vehicle.m_color3;
+            CS_TreeProps.Mod.propToVehicleCloneMap.Add(propInfo, vehicle);
+
+            return false;
+        }
+    }
+
 
     [HarmonyPatch]
     public static class LoadingExtensionPatch
@@ -169,6 +275,10 @@ namespace TVPropPatch
                 key2.m_generatedInfo.m_propInfo = key2;
                 if (key2.m_mesh != null)
                 {
+                    if (key2.m_isCustomContent)
+                    {
+                        key2.m_mesh = UnityEngine.Object.Instantiate<Mesh>(value2.m_mesh);
+                    }
                     key2.m_generatedInfo.m_size = Vector3.one * (Math.Max(key2.m_mesh.bounds.extents.x, Math.Max(key2.m_mesh.bounds.extents.y, key2.m_mesh.bounds.extents.z)) * 2f - 1f);
                 }
                 if (key2.m_material != null)
@@ -178,13 +288,13 @@ namespace TVPropPatch
                     key2.m_material.SetColor("_ColorV2", key2.m_color2);
                     key2.m_material.SetColor("_ColorV3", key2.m_color3);
                 }
-                if (CS_TreeProps.Mod.configuration.TreesShouldNotSway)
+                if (CS_TreeProps.Mod.configuration.TreesShouldNotSway && key2.m_isCustomContent)
                 {
                     try
                     {
                         if (key2.m_material.shader.name == "Custom/Trees/Default")
                         {
-                            Debug.Log("[Tree and Vehicle Props] Cleared vertex colors for " + key2.name);
+                            // Debug.Log("[Tree and Vehicle Props] Cleared vertex colors for " + key2.name);
                             Color[] array2 = new Color[key2.m_mesh.vertices.Length];
                             for (int i = 0; i < array2.Length; i++)
                             {
@@ -193,14 +303,14 @@ namespace TVPropPatch
                             key2.m_mesh.colors = array2;
                         }
                     }
-                    catch (Exception)
+                    catch (Exception ex)
                     {
-                        Debug.Log("[Tree and Vehicle Props] Vanilla tree prop skipped.");
+                        Debug.Log($"{ex.Message}");
                     }
                 }
                 Mod.generatedTreeProp.Add(key2);
             }
-            
+
             return false;
         }
     }
