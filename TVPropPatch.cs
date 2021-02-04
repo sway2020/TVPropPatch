@@ -7,18 +7,33 @@ using UnityEngine;
 using ColossalFramework.UI;
 using System.Collections.Generic;
 using CS_TreeProps;
+using System.IO;
+using ColossalFramework.IO;
 
 namespace TVPropPatch
 {
     public class Mod : IUserMod
     {
-        public string Name => "TV Props Patch 1.4";
+        public string Name => "TV Props Patch 1.5";
         public string Description => "Patch the Tree & Vehicle Props mod. Add support for Find It 2";
+
+        public static Dictionary<string, bool> skippedVehicleDictionary = new Dictionary<string, bool>();
+        public static Dictionary<string, bool> skippedTreeDictionary = new Dictionary<string, bool>();
 
         public void OnEnabled()
         {
             HarmonyHelper.DoOnHarmonyReady(() => Patcher.PatchAll());
             XMLUtils.LoadSettings();
+
+            foreach (SkippedEntry entry in Settings.skippedVehicleEntries)
+            {
+                skippedVehicleDictionary.Add(entry.name, entry.skipped);
+            }
+
+            foreach (SkippedEntry entry in Settings.skippedTreeEntries)
+            {
+                skippedTreeDictionary.Add(entry.name, entry.skipped);
+            }
         }
 
         public void OnDisabled()
@@ -48,6 +63,16 @@ namespace TVPropPatch
                 });
                 skipVanillaVehicles.tooltip = "Generated vanilla tree props will disappear next time when a save file is loaded";
                 group.AddSpace(10);
+
+                // show path to TVPropPatchConfig.xml
+                string path = Path.Combine(DataLocation.executableDirectory, "TVPropPatchConfig.xml");
+                UITextField customTagsFilePath = (UITextField)group.AddTextfield("Config File", path, _ => { }, _ => { });
+                customTagsFilePath.width = panel.width - 30;
+                // from aubergine10's AutoRepair
+                if (Application.platform == RuntimePlatform.WindowsPlayer)
+                {
+                    group.AddButton("Show in File Explorer", () => System.Diagnostics.Process.Start("explorer.exe", "/select," + path));
+                }
 
 
             }
@@ -123,6 +148,7 @@ namespace TVPropPatch
         {
             if (tree == null) return false;
             if (Settings.skipVanillaTrees && !tree.m_isCustomContent) return false;
+            if (Mod.skippedTreeDictionary.ContainsKey(tree.name) && Mod.skippedTreeDictionary[tree.name]) return false;
 
             PropInfo propInfo = AssetExtension.CloneProp();
             propInfo.name = tree.name.Replace("_Data", "") + " Prop_Data";
@@ -142,6 +168,11 @@ namespace TVPropPatch
             propInfo.m_color3 = tree.m_defaultColor;
             CS_TreeProps.Mod.propToTreeCloneMap.Add(propInfo, tree);
 
+            if (!Mod.skippedTreeDictionary.ContainsKey(tree.name))
+            {
+                Settings.skippedTreeEntries.Add(new SkippedEntry(tree.name));
+            }
+
             return false;
         }
     }
@@ -158,6 +189,7 @@ namespace TVPropPatch
         {
             if (vehicle == null || vehicle.name == "Vortex") return false;
             if (Settings.skipVanillaVehicles && !vehicle.m_isCustomContent) return false;
+            if (Mod.skippedVehicleDictionary.ContainsKey(vehicle.name) && Mod.skippedVehicleDictionary[vehicle.name]) return false;
 
             PropInfo propInfo = AssetExtension.CloneProp();
             propInfo.name = vehicle.name.Replace("_Data", "") + " Prop_Data";
@@ -178,6 +210,11 @@ namespace TVPropPatch
             propInfo.m_color2 = vehicle.m_color2;
             propInfo.m_color3 = vehicle.m_color3;
             CS_TreeProps.Mod.propToVehicleCloneMap.Add(propInfo, vehicle);
+
+            if (!Mod.skippedVehicleDictionary.ContainsKey(vehicle.name))
+            {
+                Settings.skippedVehicleEntries.Add(new SkippedEntry(vehicle.name));
+            }
 
             return false;
         }
@@ -311,6 +348,7 @@ namespace TVPropPatch
                 Mod.generatedTreeProp.Add(key2);
             }
 
+            XMLUtils.SaveSettings();
             return false;
         }
     }
