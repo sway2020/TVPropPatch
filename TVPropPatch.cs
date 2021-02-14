@@ -14,7 +14,7 @@ namespace TVPropPatch
 {
     public class Mod : IUserMod
     {
-        public string Name => "TV Props Patch 1.5";
+        public string Name => "TV Props Patch 1.5.1";
         public string Description => "Patch the Tree & Vehicle Props mod. Add support for Find It 2";
 
         public static Dictionary<string, bool> skippedVehicleDictionary = new Dictionary<string, bool>();
