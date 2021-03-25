@@ -14,7 +14,7 @@ namespace TVPropPatch
 {
     public class Mod : IUserMod
     {
-        public string Name => "TV Props Patch 1.5.1";
+        public string Name => "TV Props Patch 1.5.2";
         public string Description => "Patch the Tree & Vehicle Props mod. Add support for Find It 2";
 
         public static Dictionary<string, bool> skippedVehicleDictionary = new Dictionary<string, bool>();
@@ -27,11 +27,13 @@ namespace TVPropPatch
 
             foreach (SkippedEntry entry in Settings.skippedVehicleEntries)
             {
+                if (skippedVehicleDictionary.ContainsKey(entry.name)) continue;
                 skippedVehicleDictionary.Add(entry.name, entry.skipped);
             }
 
             foreach (SkippedEntry entry in Settings.skippedTreeEntries)
             {
+                if (skippedTreeDictionary.ContainsKey(entry.name)) continue;
                 skippedTreeDictionary.Add(entry.name, entry.skipped);
             }
         }
