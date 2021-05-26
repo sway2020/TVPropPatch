@@ -15,7 +15,7 @@ namespace TVPropPatch
 {
     public class Mod : IUserMod
     {
-        public string Name => "TV Props Patch 1.6";
+        public string Name => "TV Props Patch 1.6.1";
         public string Description => "Patch the Tree & Vehicle Props mod. Add support for Find It 2";
 
         public static Dictionary<string, bool> skippedVehicleDictionary = new Dictionary<string, bool>();
@@ -170,6 +170,7 @@ namespace TVPropPatch
             propInfo.m_color2 = tree.m_defaultColor;
             propInfo.m_color3 = tree.m_defaultColor;
             CS_TreeProps.Mod.propToTreeCloneMap.Add(propInfo, tree);
+            Mod.generatedTreeProp.Add(propInfo);
 
             if (!Mod.skippedTreeDictionary.ContainsKey(tree.name))
             {
@@ -213,6 +214,7 @@ namespace TVPropPatch
             propInfo.m_color2 = vehicle.m_color2;
             propInfo.m_color3 = vehicle.m_color3;
             CS_TreeProps.Mod.propToVehicleCloneMap.Add(propInfo, vehicle);
+            Mod.propVehicleInfoTable.Add(propInfo, vehicle);
 
             if (!Mod.skippedVehicleDictionary.ContainsKey(vehicle.name))
             {
@@ -295,7 +297,6 @@ namespace TVPropPatch
                 }
 
                 Mod.generatedVehicleProp.Add(key);
-                Mod.propVehicleInfoTable.Add(key, value);
             }
             foreach (KeyValuePair<PropInfo, TreeInfo> keyValuePair2 in CS_TreeProps.Mod.propToTreeCloneMap)
             {
@@ -348,7 +349,6 @@ namespace TVPropPatch
                         Debug.Log($"{ex.Message}");
                     }
                 }
-                Mod.generatedTreeProp.Add(key2);
             }
 
             XMLUtils.SaveSettings();
