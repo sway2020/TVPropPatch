@@ -9,12 +9,13 @@ using System.Collections.Generic;
 using CS_TreeProps;
 using System.IO;
 using ColossalFramework.IO;
+using ColossalFramework;
 
 namespace TVPropPatch
 {
     public class Mod : IUserMod
     {
-        public string Name => "TV Props Patch 1.5.2";
+        public string Name => "TV Props Patch 1.6";
         public string Description => "Patch the Tree & Vehicle Props mod. Add support for Find It 2";
 
         public static Dictionary<string, bool> skippedVehicleDictionary = new Dictionary<string, bool>();
@@ -355,4 +356,23 @@ namespace TVPropPatch
         }
     }
 
+
+    [HarmonyPatch]
+    public static class LoadingHookPatch
+    {
+        public static MethodBase TargetMethod()
+        {
+            return typeof(CS_TreeProps.LoadingHook).GetMethod(nameof(CS_TreeProps.LoadingHook.Prefix));
+        }
+        public static bool Prefix()
+        {
+            if (!CS_TreeProps.Mod.PrefabsInitialized)
+            {
+                CS_TreeProps.Mod.PrefabsInitialized = true;
+                Singleton<LoadingManager>.instance.QueueLoadingAction(CS_TreeProps.Enumerations.CreateClones());
+                Singleton<LoadingManager>.instance.QueueLoadingAction(Enumerations.InitializeAndBindClones());
+            }
+            return false;
+        }
+    }
 }
