@@ -71,13 +71,8 @@ namespace TVPropPatch
                 string path = Path.Combine(DataLocation.executableDirectory, "TVPropPatchConfig.xml");
                 UITextField customTagsFilePath = (UITextField)group.AddTextfield("Config File", path, _ => { }, _ => { });
                 customTagsFilePath.width = panel.width - 30;
-                // from aubergine10's AutoRepair
-                if (Application.platform == RuntimePlatform.WindowsPlayer)
-                {
-                    group.AddButton("Show in File Explorer", () => System.Diagnostics.Process.Start("explorer.exe", "/select," + path));
-                }
-
-
+                group.AddButton("Show in File Explorer", () => UnityEngine.Application.OpenURL(DataLocation.executableDirectory));
+            
             }
             catch (Exception e)
             {
