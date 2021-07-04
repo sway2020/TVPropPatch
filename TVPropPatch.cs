@@ -15,7 +15,7 @@ namespace TVPropPatch
 {
     public class Mod : IUserMod
     {
-        public string Name => "TV Props Patch 1.6.1";
+        public string Name => "TV Props Patch 1.6.2";
         public string Description => "Patch the Tree & Vehicle Props mod. Add support for Find It 2";
 
         public static Dictionary<string, bool> skippedVehicleDictionary = new Dictionary<string, bool>();
@@ -69,7 +69,7 @@ namespace TVPropPatch
 
                 // show path to TVPropPatchConfig.xml
                 string path = Path.Combine(DataLocation.executableDirectory, "TVPropPatchConfig.xml");
-                UITextField customTagsFilePath = (UITextField)group.AddTextfield("Config File", path, _ => { }, _ => { });
+                UITextField customTagsFilePath = (UITextField)group.AddTextfield("Configuration File - TVPropPatchConfig.xml", path, _ => { }, _ => { });
                 customTagsFilePath.width = panel.width - 30;
                 group.AddButton("Show in File Explorer", () => UnityEngine.Application.OpenURL(DataLocation.executableDirectory));
             
